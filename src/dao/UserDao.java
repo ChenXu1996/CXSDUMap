@@ -22,13 +22,7 @@ public class UserDao {
 			con=DriverManager.getConnection(url,user,pwd);
 			if(!con.isClosed())
 				System.out.println("succeed in connecting DB");
-//			Statement st=con.createStatement();
-//			String sql="select * from students where age=22";
-//			ResultSet rs=st.executeQuery(sql);
-//			while(rs.next()){
-//				System.out.print(rs.getString("name")+'\t');
-//			}
-//			
+			
 		}catch(ClassNotFoundException e){
 			System.out.println("Not Find Driver");
 			return false;
@@ -50,18 +44,14 @@ public class UserDao {
 			}
 		}		
 	}
-	
-	public boolean isLogSuccess(String username,String password) throws SQLException{
+	//登录功能
+	public User isLogSuccess(String email,String password) throws SQLException{
 		UserDao.connectDB();
-		if(con==null){
-			System.out.println("DB fail");
-			return false;
-		}
-		String sql="select password from users where username=?";
+		String sql="select password,username from users where email=?";
 //		System.out.println(username+"!!!!!!!!");
 		PreparedStatement pst=con.prepareStatement(sql);
-		pst.setString(1, username);
-		System.out.println(pst.toString());
+		pst.setString(1, email);
+		
 		ResultSet rst=pst.executeQuery();
 		if(!rst.next()){
 			System.out.println("没有此用户");
@@ -69,11 +59,46 @@ public class UserDao {
 		else{
 			String realPwd=rst.getString("password");
 			if(password.equals(realPwd)){
+				User user=new User();
+				user.setUsername(rst.getString("username"));
 				rst.close();
-				return true;
+				return user;
 			}
 		}
 		rst.close();
-		return false;
+		return null;
 	}
+	
+	public boolean isSignUpSuccess(User user) throws SQLException{
+		UserDao.connectDB();
+		if(this.isExistUser(user.getEmail(), con)){
+			return false;
+		}
+		String sql="insert into users values(?,?,?,?,?)";
+		PreparedStatement pst=con.prepareStatement(sql);
+		//pst.setString(1, email);//将email填入预备语句
+		pst.setString(1, user.getId());
+		pst.setString(2, user.getUsername());
+		pst.setString(3, user.getPassword());
+		pst.setString(4, user.getEmail());
+		pst.setString(5, "1");
+		
+		pst.executeUpdate();
+		
+		UserDao.cutDownCon();
+		return true;
+	}
+	public boolean isExistUser(String email,Connection con) throws SQLException{
+		String sql="select password from users where email=?";
+		PreparedStatement pst=con.prepareStatement(sql);
+		pst.setString(1, email);//将email填入预备语句
+		
+		ResultSet rst=pst.executeQuery();
+		if(!rst.next()){
+			return false;
+		}
+		rst.close();
+		return true;
+	}
+	
 }
