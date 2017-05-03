@@ -25,11 +25,13 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
   <body>
     
     <% 
-    String s=session.getAttribute("username").toString();
+    String s=request.getParameter("email");
     if(s==null)
     s=""; 
+    session.setAttribute("email", s);
     %> 
     welcome<%=s %>
     <br>
+    <a href="doLogin.jsp">here!</a>
   </body>
 </html>
